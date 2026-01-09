@@ -1,4 +1,6 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
 import Login from "./pages/Login";
 import PatientList from "./pages/PatientList";
 import PatientDetail from "./pages/PatientDetail";
@@ -8,8 +10,8 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/patients" element={<PatientList />} />
-        <Route path="/patient/:patientId" element={<PatientDetail />} />
+        <Route path="/patient-list" element={<PatientList />} />
+        <Route path="/patient-detail/:patientId" element={<PatientDetail />} />
       </Routes>
     </Router>
   );

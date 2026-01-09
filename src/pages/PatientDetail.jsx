@@ -1,278 +1,154 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
-import RiskBadge from "../components/RiskBadge";
-import UnifiedChart from "../components/UnifiedChart";
-import html2pdf from "html2pdf.js";
+import { useNavigate } from "react-router-dom";
+import userIcon from "../assets/user.png"; // default user icon
 
-const PatientDetail = () => {
-  const { patientId } = useParams();
+const patientsSample = [
+  { id: 1, name: "Nita Magarpatta", bedId: "B101", RR: 20, BP: "110/70", mentalStatus: "Normal", condition: "Stable", lastCheck: "Today, 11:45" },
+  { id: 2, name: "Ryan Gray", bedId: "B102", RR: 25, BP: "100/65", mentalStatus: "Altered", condition: "Watch", lastCheck: "Today, 14:29" },
+  { id: 3, name: "Olivia Brown", bedId: "B103", RR: 28, BP: "85/60", mentalStatus: "Altered", condition: "Escalating", lastCheck: "Yesterday, 09:45" },
+  { id: 4, name: "John Smith", bedId: "B104", RR: 32, BP: "80/55", mentalStatus: "Altered", condition: "Critical", lastCheck: "Today, 10:15" },
+  { id: 5, name: "Emma Watson", bedId: "B105", RR: 22, BP: "115/75", mentalStatus: "Normal", condition: "Stable", lastCheck: "Yesterday, 16:20" },
+];
 
-  const [patient, setPatient] = useState({
-    id: patientId,
-    name: "John Doe",
-    vitals: [],
-    alerts: [],
-    history: []
+const conditionColors = {
+  Stable: "bg-green-100 text-green-800",
+  Watch: "bg-yellow-100 text-yellow-800",
+  Escalating: "bg-orange-100 text-orange-800",
+  Critical: "bg-red-100 text-red-800",
+};
+
+const PatientList = () => {
+  const navigate = useNavigate();
+  const [patients] = useState(patientsSample);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState("All");
+
+  // Summary counts
+  const totalPatients = patients.length;
+  const totalStable = patients.filter((p) => p.condition === "Stable").length;
+  const totalCritical = patients.filter((p) => p.condition === "Critical").length;
+
+  const filteredPatients = patients.filter((p) => {
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesFilter = filter === "All" || p.condition === filter;
+    return matchesSearch && matchesFilter;
   });
-
-  const [newVital, setNewVital] = useState({
-    respiratoryRate: "",
-    systolicBP: "",
-    mentalStatus: "Normal"
-  });
-
-  const [ackNotes, setAckNotes] = useState({});
-  const [activeMenu, setActiveMenu] = useState("Vitals"); // "Vitals", "Audit", "Replay", "Report"
-
-  // Submit new vital entry
-  const handleSubmitVital = () => {
-    if (!newVital.respiratoryRate || !newVital.systolicBP) return;
-
-    const timestamp = new Date().toLocaleString();
-    const stage = calculateStage(newVital);
-
-    const entry = { ...newVital, timestamp, stage };
-
-    setPatient(prev => ({
-      ...prev,
-      vitals: [...prev.vitals, entry],
-      alerts:
-        stage !== "Stable"
-          ? [...prev.alerts, { stage, timestamp, acknowledged: false }]
-          : prev.alerts,
-      history: [...prev.history, entry]
-    }));
-
-    setNewVital({ respiratoryRate: "", systolicBP: "", mentalStatus: "Normal" });
-  };
-
-  const calculateStage = ({ respiratoryRate, systolicBP, mentalStatus }) => {
-    if (respiratoryRate >= 30 || systolicBP < 90 || mentalStatus === "Altered") return "Critical";
-    if (respiratoryRate >= 25 || systolicBP < 100) return "Escalating";
-    if (respiratoryRate >= 22 || systolicBP < 110) return "Watch";
-    return "Stable";
-  };
-
-  const handleAcknowledge = index => {
-    const updatedAlerts = [...patient.alerts];
-    updatedAlerts[index].acknowledged = true;
-    updatedAlerts[index].notes = ackNotes[index] || "No notes";
-    setPatient({ ...patient, alerts: updatedAlerts });
-    setAckNotes(prev => ({ ...prev, [index]: "" }));
-  };
-
-  const downloadPDF = () => {
-    const element = document.getElementById("report-content");
-    html2pdf().from(element).save(`Sepsis_Report_${patient.name}.pdf`);
-  };
 
   return (
-    <div className="flex min-h-screen">
-      {/* Side Menu */}
-      <aside className="w-56 bg-gray-100 p-6 flex flex-col gap-4">
-        <h3 className="text-lg font-semibold mb-4">Menu</h3>
+    <div className="min-h-screen bg-gray-50 p-8">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-6">
+        <h1 className="text-3xl font-bold text-teal-600">Patient Dashboard</h1>
         <button
-          className={`py-2 px-4 rounded text-left ${activeMenu === "Audit" ? "bg-blue-500 text-white" : "bg-white"}`}
-          onClick={() => setActiveMenu("Audit")}
+          onClick={() => alert("Add New Patient functionality")}
+          className="bg-teal-600 text-white px-5 py-2 rounded shadow hover:bg-teal-700"
         >
-          Audit Log
+          + Add New Patient
         </button>
-        <button
-          className={`py-2 px-4 rounded text-left ${activeMenu === "Replay" ? "bg-blue-500 text-white" : "bg-white"}`}
-          onClick={() => setActiveMenu("Replay")}
-        >
-          Retrospective Replay
-        </button>
-        <button
-          className={`py-2 px-4 rounded text-left ${activeMenu === "Report" ? "bg-blue-500 text-white" : "bg-white"}`}
-          onClick={() => setActiveMenu("Report")}
-        >
-          Report & PDF Download
-        </button>
-      </aside>
+      </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-8 bg-white pt-32">
-        {/* Alerts Notification (only in Vitals view) */}
-{activeMenu === "Vitals" && patient.alerts.some(a => !a.acknowledged) && (
-  <div className="mb-4">
-    {patient.alerts
-      .filter(a => !a.acknowledged)
-      .map((a, idx) => (
-        <div
-          key={idx}
-          className="bg-red-500 text-white p-3 rounded flex justify-between items-center shadow-md animate-fade-in"
-        >
-          <span className="font-semibold">
-            ALERT: {a.stage} at {a.timestamp}
-          </span>
-          <button
-            onClick={() => handleAcknowledge(idx)}
-            className="bg-white text-red-500 px-2 py-1 rounded hover:bg-gray-100 ml-2"
-          >
-            Acknowledge
-          </button>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center">
+          <span className="text-gray-500">Total Patients</span>
+          <span className="text-2xl font-bold text-teal-600">{totalPatients}</span>
         </div>
-      ))}
-  </div>
-)}
+        <div className="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center">
+          <span className="text-gray-500">Stable</span>
+          <span className="text-2xl font-bold text-green-600">{totalStable}</span>
+        </div>
+        <div className="bg-white shadow rounded-lg p-4 flex flex-col items-center justify-center">
+          <span className="text-gray-500">Critical</span>
+          <span className="text-2xl font-bold text-red-600">{totalCritical}</span>
+        </div>
+      </div>
 
-        
-        <h2 className="text-2xl font-bold mb-6">{patient.name} - Patient Detail</h2>
+      {/* Search & Filter */}
+      <div className="flex flex-col md:flex-row gap-4 mb-4">
+        <input
+          type="text"
+          placeholder="Search patients..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="flex-1 border border-gray-300 rounded px-3 py-2 shadow-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
+        />
+        <select
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          className="border border-gray-300 rounded px-3 py-2 shadow-sm focus:ring-2 focus:ring-teal-400 focus:outline-none"
+        >
+          <option>All</option>
+          <option>Stable</option>
+          <option>Watch</option>
+          <option>Escalating</option>
+          <option>Critical</option>
+        </select>
+      </div>
 
-        {/* Vitals Input */}
-        {activeMenu === "Vitals" && (
-          <div className="flex gap-3 mb-6">
-            <input
-              type="number"
-              placeholder="Respiratory Rate"
-              value={newVital.respiratoryRate}
-              onChange={e => setNewVital({ ...newVital, respiratoryRate: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2 w-36"
-            />
-            <input
-              type="number"
-              placeholder="Systolic BP"
-              value={newVital.systolicBP}
-              onChange={e => setNewVital({ ...newVital, systolicBP: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2 w-36"
-            />
-            <select
-              value={newVital.mentalStatus}
-              onChange={e => setNewVital({ ...newVital, mentalStatus: e.target.value })}
-              className="border border-gray-300 rounded px-3 py-2 w-36"
-            >
-              <option>Normal</option>
-              <option>Altered</option>
-            </select>
-            <button
-              onClick={handleSubmitVital}
-              className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Submit
-            </button>
-          </div>
-        )}
-
-        {/* Vitals Timeline / Unified Chart */}
-        {activeMenu === "Vitals" && (
-          <div id="report-content" className="mb-8">
-            <h3 className="text-xl font-semibold mb-2">Vitals Timeline</h3>
-
-            <UnifiedChart data={patient.vitals} />
-
-            {patient.vitals.length === 0 ? (
-              <p className="text-gray-500 mt-4">No vitals entered yet.</p>
+      {/* Patient Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white shadow rounded-lg overflow-hidden">
+          <thead className="bg-teal-600 text-white">
+            <tr>
+              <th className="px-6 py-3">Patient</th>
+              <th className="px-6 py-3">Bed ID</th>
+              <th className="px-6 py-3">RR</th>
+              <th className="px-6 py-3">BP</th>
+              <th className="px-6 py-3">Mental Status</th>
+              <th className="px-6 py-3">Condition</th>
+              <th className="px-6 py-3">Last Check</th>
+              <th className="px-6 py-3">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredPatients.length === 0 ? (
+              <tr>
+                <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
+                  No patients found.
+                </td>
+              </tr>
             ) : (
-              <div className="space-y-2 mt-4">
-                {patient.vitals.map((v, idx) => (
-                  <div
-                    key={idx}
-                    className="flex justify-between items-center p-2 border border-gray-200 rounded"
+              filteredPatients.map((p) => (
+                <tr key={p.id} className="border-b hover:bg-gray-50 transition duration-150 cursor-pointer">
+                  <td
+                    className="px-6 py-4 flex items-center gap-3"
+                    onClick={() => navigate(`/patient-detail/${p.id}`)}
                   >
-                    <div className="w-36">{v.timestamp}</div>
-                    <div className="w-64">
-                      RR: {v.respiratoryRate}, BP: {v.systolicBP}, Status: {v.mentalStatus}
-                    </div>
-                    <RiskBadge risk={v.stage} />
-                    <div className="text-gray-600 text-sm">{`Summary: Patient ${v.stage} at ${v.timestamp}`}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Alerts Panel */}
-        {activeMenu === "Vitals" && (
-          <div className="mb-8">
-            <h3 className="text-xl font-semibold mb-2">Alerts & Escalation</h3>
-            {patient.alerts.length === 0 ? (
-              <p className="text-gray-500">No active alerts</p>
-            ) : (
-              <div className="space-y-2">
-                {patient.alerts.map((a, idx) => (
-                  <div
-                    key={idx}
-                    className="flex gap-2 items-center p-2 border border-gray-200 rounded"
-                  >
-                    <RiskBadge risk={a.stage} />
-                    <div className="w-36">{a.timestamp}</div>
-                    <input
-                      type="text"
-                      placeholder="Technical Notes"
-                      value={ackNotes[idx] || ""}
-                      onChange={e => setAckNotes(prev => ({ ...prev, [idx]: e.target.value }))}
-                      className="border border-gray-300 rounded px-2 py-1 flex-1"
+                    <img
+                      src={userIcon}
+                      alt={p.name}
+                      className="w-10 h-10 rounded-full"
                     />
-                    {!a.acknowledged && (
-                      <button
-                        onClick={() => handleAcknowledge(idx)}
-                        className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                      >
-                        Acknowledge
-                      </button>
-                    )}
-                    {a.acknowledged && <span className="text-green-600 font-semibold">Acknowledged</span>}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Audit Log */}
-        {activeMenu === "Audit" && (
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Audit / Entry History</h3>
-            <table className="w-full border-collapse border border-gray-300">
-              <thead>
-                <tr className="bg-gray-100">
-                  <th className="border border-gray-300 px-2 py-1">Timestamp</th>
-                  <th className="border border-gray-300 px-2 py-1">RR</th>
-                  <th className="border border-gray-300 px-2 py-1">SBP</th>
-                  <th className="border border-gray-300 px-2 py-1">Mental Status</th>
-                  <th className="border border-gray-300 px-2 py-1">Stage</th>
+                    <span className="font-medium">{p.name}</span>
+                  </td>
+                  <td className="px-6 py-4">{p.bedId}</td>
+                  <td className="px-6 py-4">{p.RR}</td>
+                  <td className="px-6 py-4">{p.BP}</td>
+                  <td className="px-6 py-4">{p.mentalStatus}</td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-sm font-semibold ${conditionColors[p.condition]}`}
+                    >
+                      {p.condition}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">{p.lastCheck}</td>
+                  <td className="px-6 py-4">
+                    <button
+                      className="text-teal-600 hover:underline"
+                      onClick={() => navigate(`/patient-detail/${p.id}`)}
+                    >
+                      View
+                    </button>
+                  </td>
                 </tr>
-              </thead>
-              <tbody>
-                {patient.history.map((h, idx) => (
-                  <tr key={idx}>
-                    <td className="border border-gray-300 px-2 py-1">{h.timestamp}</td>
-                    <td className="border border-gray-300 px-2 py-1">{h.respiratoryRate}</td>
-                    <td className="border border-gray-300 px-2 py-1">{h.systolicBP}</td>
-                    <td className="border border-gray-300 px-2 py-1">{h.mentalStatus}</td>
-                    <td className="border border-gray-300 px-2 py-1">{h.stage}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {/* Retrospective Replay */}
-        {activeMenu === "Replay" && (
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Retrospective Replay</h3>
-            <p className="text-gray-500">Timeline animation of patient vitals will be displayed here (future integration).</p>
-          </div>
-        )}
-
-        {/* Report & PDF */}
-        {activeMenu === "Report" && (
-          <div>
-            <h3 className="text-xl font-semibold mb-2">Report & PDF Download</h3>
-            <button
-              onClick={downloadPDF}
-              className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
-            >
-              Download PDF Report
-            </button>
-          </div>
-        )}
-      </main>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
 
-export default PatientDetail;
+export default PatientList;

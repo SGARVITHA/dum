@@ -1,69 +1,133 @@
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import hospitalImage from "../assets/hospital.png"; // doctor icon
 
 const Login = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
-  const [password, setPassword] = useState("");
-  const [occupation, setOccupation] = useState("Doctor"); // default occupation
+  const [isSignup, setIsSignup] = useState(false); // toggle login/signup
+  const [form, setForm] = useState({
+    username: "",
+    password: "",
+    confirmPassword: "",
+    occupation: "Doctor",
+  });
 
-  const handleLogin = () => {
-    if (!name || !password) {
-      return alert("Please fill all fields");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isSignup) {
+      // Signup logic (validation, backend API call)
+      if (form.password !== form.confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+      alert(`Signed up as ${form.occupation}: ${form.username}`);
+    } else {
+      // Login logic (authentication, JWT, etc.)
+      navigate("/patient-list");
     }
-    // save user info if needed
-    // Example: localStorage.setItem("user", JSON.stringify({ name, occupation }));
-    navigate("/patients");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200">
-      <div className="bg-white rounded-2xl shadow-lg p-10 w-96">
-        <h2 className="text-3xl font-bold text-center mb-6 text-blue-700">Vitalyn Login</h2>
+    <div className="flex min-h-screen">
+      {/* Left Side */}
+      <div className="w-1/2 bg-teal-600 flex justify-center items-center">
+        <div className="bg-white p-16 rounded shadow-lg w-3/4 ml-8">
+          <h1 className="text-4xl font-bold mb-6 text-center text-teal-600">
+            {isSignup ? "SIGN UP" : "HOSPITAL LOGIN"}
+          </h1>
+          <form className="w-full" onSubmit={handleSubmit}>
+            <label className="block mb-2 font-semibold">Username</label>
+            <input
+              type="text"
+              placeholder="Enter username"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              required
+            />
 
-        <div className="flex flex-col gap-4">
-          {/* Name */}
-          <input
-            type="text"
-            placeholder="Enter your name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+            <label className="block mb-2 font-semibold">Password</label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              required
+            />
 
-          {/* Password */}
-          <input
-            type="password"
-            placeholder="Enter your password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
+            {isSignup && (
+              <>
+                <label className="block mb-2 font-semibold">Confirm Password</label>
+                <input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={form.confirmPassword}
+                  onChange={(e) => setForm({ ...form, confirmPassword: e.target.value })}
+                  className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+                  required
+                />
+              </>
+            )}
 
-          {/* Occupation */}
-          <select
-            value={occupation}
-            onChange={(e) => setOccupation(e.target.value)}
-            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-          >
-            <option>Doctor</option>
-            <option>Nurse</option>
-            <option>Technician</option>
-          </select>
+            <label className="block mb-2 font-semibold">Occupation</label>
+            <select
+              value={form.occupation}
+              onChange={(e) => setForm({ ...form, occupation: e.target.value })}
+              className="w-full border border-gray-300 rounded px-3 py-2 mb-6"
+            >
+              <option>Doctor</option>
+              <option>Nurse</option>
+              <option>Admin</option>
+            </select>
 
-          {/* Login Button */}
-          <button
-            onClick={handleLogin}
-            className="bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
-          >
-            Login
-          </button>
+            <button
+              type="submit"
+              className="w-full bg-teal-600 text-white px-4 py-2 rounded hover:bg-teal-700 mb-4"
+            >
+              {isSignup ? "Sign Up" : "Login"}
+            </button>
+          </form>
+
+          <div className="text-center text-sm text-teal-600">
+            {isSignup ? (
+              <>
+                Already have an account?{" "}
+                <button
+                  className="underline"
+                  onClick={() => setIsSignup(false)}
+                >
+                  Login
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{" "}
+                <button
+                  className="underline"
+                  onClick={() => setIsSignup(true)}
+                >
+                  Sign Up
+                </button>
+              </>
+            )}
+          </div>
+
+          {!isSignup && (
+            <div className="text-center mt-2 text-sm">
+              <button className="underline text-teal-600">Forgot Password?</button>
+            </div>
+          )}
         </div>
+      </div>
 
-        {/* Optional Signup link */}
-        <p className="mt-4 text-center text-gray-500 text-sm">
-          Don't have an account? <span className="text-blue-600 cursor-pointer">Sign up</span>
-        </p>
+      {/* Right Side */}
+      <div className="w-1/2 bg-white flex justify-center items-center">
+        <img
+          src={hospitalImage}
+          alt="Doctor Illustration"
+          className="w-200 h-200"
+        />
       </div>
     </div>
   );
