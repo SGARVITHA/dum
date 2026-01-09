@@ -1,212 +1,180 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import userIcon from "../assets/user.png";
 
-const patientsSample = [
-  { id: 1, name: "Nita Magarpatta", bedId: "B101", bp: 120, rr: 18, mentalStatus: "Normal", condition: "Stable", lastCheck: "Today, 11:45" },
-  { id: 2, name: "Ryan Gray", bedId: "B102", bp: 105, rr: 22, mentalStatus: "Altered", condition: "Watch", lastCheck: "Today, 14:29" },
-  { id: 3, name: "Olivia Brown", bedId: "B103", bp: 95, rr: 26, mentalStatus: "Altered", condition: "Escalating", lastCheck: "Yesterday, 09:45" },
-  { id: 4, name: "Liam Smith", bedId: "B104", bp: 85, rr: 32, mentalStatus: "Altered", condition: "Critical", lastCheck: "Today, 10:15" },
-  { id: 5, name: "Emma Johnson", bedId: "B105", bp: 118, rr: 16, mentalStatus: "Normal", condition: "Stable", lastCheck: "Yesterday, 15:30" },
-  { id: 6, name: "Noah Williams", bedId: "B106", bp: 102, rr: 24, mentalStatus: "Normal", condition: "Watch", lastCheck: "Today, 12:50" },
+const initialPatients = [
+  { id: 1, name: "John Smith", pid: "P-001", age: 67, gender: "Male", status: "Critical", time: "2 mins ago" },
+  { id: 2, name: "Sarah Johnson", pid: "P-002", age: 45, gender: "Female", status: "High Risk", time: "15 mins ago" },
+  { id: 3, name: "Michael Chen", pid: "P-003", age: 52, gender: "Male", status: "Stable", time: "1 hour ago" },
+  { id: 4, name: "Emily Williams", pid: "P-004", age: 78, gender: "Female", status: "High Risk", time: "30 mins ago" },
 ];
 
-const conditionColors = {
-  Stable: "bg-green-100 text-green-800",
-  Watch: "bg-yellow-100 text-yellow-800",
-  Escalating: "bg-orange-100 text-orange-800",
-  Critical: "bg-red-100 text-red-800",
+const statusStyle = {
+  Critical: "bg-red-100 text-red-700 border-red-500",
+  "High Risk": "bg-yellow-100 text-yellow-700 border-yellow-500",
+  Stable: "bg-green-100 text-green-700 border-green-500",
 };
 
 const PatientList = () => {
   const navigate = useNavigate();
-  const [patients, setPatients] = useState(patientsSample);
+  const [patients, setPatients] = useState(initialPatients);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("All");
   const [showModal, setShowModal] = useState(false);
-  const [newPatient, setNewPatient] = useState({ name: "", bedId: "", bp: "", rr: "", mentalStatus: "Normal", condition: "Stable" });
-
-  const filteredPatients = patients.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesFilter = filter === "All" || p.condition === filter;
-    return matchesSearch && matchesFilter;
+  const [newPatient, setNewPatient] = useState({
+    name: "",
+    pid: "",
+    age: "",
+    gender: "Male",
+    status: "High Risk",
   });
 
+  // Summary counts
+  const totalPatients = patients.length;
+  const totalCritical = patients.filter((p) => p.status === "Critical").length;
+  const totalStable = patients.filter((p) => p.status === "Stable").length;
+
   const handleAddPatient = () => {
+    if (!newPatient.name || !newPatient.pid || !newPatient.age) {
+      alert("Please fill all required fields");
+      return;
+    }
     const nextId = patients.length ? patients[patients.length - 1].id + 1 : 1;
     setPatients([
       ...patients,
-      { id: nextId, lastCheck: "Just now", ...newPatient },
+      { ...newPatient, id: nextId, time: "Just now" },
     ]);
-    setNewPatient({ name: "", bedId: "", bp: "", rr: "", mentalStatus: "Normal", condition: "Stable" });
+    setNewPatient({ name: "", pid: "", age: "", gender: "Male", status: "High Risk" });
     setShowModal(false);
   };
 
+  const filteredPatients = patients.filter(
+    (p) =>
+      p.name.toLowerCase().includes(search.toLowerCase()) ||
+      p.pid.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
+    <div className="min-h-screen bg-gray-100">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-teal-600">Patient Dashboard</h1>
-        <button
-          onClick={() => setShowModal(true)}
-          className="bg-teal-600 text-white px-5 py-2 rounded-lg shadow hover:bg-teal-700 transition-all"
-        >
-          + Add New Patient
+      <div className="bg-teal-600 text-white p-6 flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Patient Monitoring Dashboard</h1>
+          <p className="text-gray-200">Real-time sepsis risk monitoring</p>
+        </div>
+        <button className="bg-white text-teal-600 font-semibold px-4 py-2 rounded shadow hover:bg-gray-100">
+          Logout
         </button>
       </div>
 
-      {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <input
-          type="text"
-          placeholder="Search patients..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 border border-gray-300 rounded px-4 py-2 shadow-sm focus:ring-2 focus:ring-teal-300"
-        />
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border border-gray-300 rounded px-4 py-2 shadow-sm focus:ring-2 focus:ring-teal-300"
-        >
-          <option>All</option>
-          <option>Stable</option>
-          <option>Watch</option>
-          <option>Escalating</option>
-          <option>Critical</option>
-        </select>
-      </div>
-
-      {/* Patient Table Card */}
-      <div className="bg-white shadow-xl rounded-xl overflow-hidden border border-gray-200">
-        <table className="w-full text-left">
-          <thead className="bg-teal-600 text-white">
-            <tr>
-              <th className="px-4 py-3">Patient</th>
-              <th className="px-4 py-3">Bed ID</th>
-              <th className="px-4 py-3">BP</th>
-              <th className="px-4 py-3">RR</th>
-              <th className="px-4 py-3">Mental Status</th>
-              <th className="px-4 py-3">Condition</th>
-              <th className="px-4 py-3">Last Check</th>
-              <th className="px-4 py-3">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredPatients.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="px-6 py-4 text-center text-gray-500">
-                  No patients found.
-                </td>
-              </tr>
-            ) : (
-              filteredPatients.map((p) => (
-                <tr
-                  key={p.id}
-                  className="border-b hover:bg-gray-50 cursor-pointer transition-all duration-150"
-                >
-                  <td
-                    className="px-4 py-3 flex items-center gap-3"
-                    onClick={() => navigate(`/patient-detail/${p.id}`)}
-                  >
-                    <img src={userIcon} alt="User Icon" className="w-10 h-10 rounded-full" />
-                    <span className="font-medium">{p.name}</span>
-                  </td>
-                  <td className="px-4 py-3">{p.bedId}</td>
-                  <td className="px-4 py-3">{p.bp}</td>
-                  <td className="px-4 py-3">{p.rr}</td>
-                  <td className="px-4 py-3">{p.mentalStatus}</td>
-                  <td className="px-4 py-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-sm font-semibold ${conditionColors[p.condition]}`}
-                    >
-                      {p.condition}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">{p.lastCheck}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      className="text-teal-600 hover:underline font-semibold"
-                      onClick={() => navigate(`/patient-detail/${p.id}`)}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Add Patient Modal */}
-      {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-          <div className="bg-white p-8 rounded-lg shadow-xl w-96">
-            <h2 className="text-xl font-bold mb-4">Add New Patient</h2>
-            <input
-              type="text"
-              placeholder="Patient Name"
-              value={newPatient.name}
-              onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
-            />
-            <input
-              type="text"
-              placeholder="Bed ID / Patient ID"
-              value={newPatient.bedId}
-              onChange={(e) => setNewPatient({ ...newPatient, bedId: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
-            />
-            <input
-              type="number"
-              placeholder="BP (Systolic)"
-              value={newPatient.bp}
-              onChange={(e) => setNewPatient({ ...newPatient, bp: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
-            />
-            <input
-              type="number"
-              placeholder="Respiratory Rate (RR)"
-              value={newPatient.rr}
-              onChange={(e) => setNewPatient({ ...newPatient, rr: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
-            />
-            <select
-              value={newPatient.mentalStatus}
-              onChange={(e) => setNewPatient({ ...newPatient, mentalStatus: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
-            >
-              <option>Normal</option>
-              <option>Altered</option>
-            </select>
-            <select
-              value={newPatient.condition}
-              onChange={(e) => setNewPatient({ ...newPatient, condition: e.target.value })}
-              className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
-            >
-              <option>Stable</option>
-              <option>Watch</option>
-              <option>Escalating</option>
-              <option>Critical</option>
-            </select>
-            <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-                onClick={() => setShowModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700"
-                onClick={handleAddPatient}
-              >
-                Add
-              </button>
-            </div>
+      <div className="p-8">
+        {/* Summary Boxes */}
+        <div className="flex gap-6 mb-6 flex-wrap">
+          <div className="bg-white p-6 rounded shadow flex-1 text-center">
+            <p className="text-gray-500">Total Patients</p>
+            <h2 className="text-3xl font-bold text-teal-600">{totalPatients}</h2>
+          </div>
+          <div className="bg-white p-6 rounded shadow flex-1 text-center">
+            <p className="text-gray-500">Critical Patients</p>
+            <h2 className="text-3xl font-bold text-red-600">{totalCritical}</h2>
+          </div>
+          <div className="bg-white p-6 rounded shadow flex-1 text-center">
+            <p className="text-gray-500">Stable Patients</p>
+            <h2 className="text-3xl font-bold text-green-600">{totalStable}</h2>
           </div>
         </div>
-      )}
+
+        {/* Search & Add */}
+        <div className="flex gap-4 mb-6">
+          <input
+            type="text"
+            placeholder="Search by name or ID..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="flex-1 px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-teal-600"
+          />
+          <button
+            className="bg-teal-600 text-white px-6 py-2 rounded hover:bg-teal-700"
+            onClick={() => setShowModal(true)}
+          >
+            + Add New Patient
+          </button>
+        </div>
+
+        {/* Patient Cards */}
+        <div className="space-y-4">
+          {filteredPatients.map((p) => (
+            <div
+              key={p.id}
+              className="bg-white border border-gray-200 rounded-lg p-5 flex justify-between items-center hover:shadow-md transition"
+            >
+              <div>
+                <h2 className="text-lg font-semibold text-gray-800">{p.name}</h2>
+                <p className="text-sm text-gray-500">{p.pid} • {p.age} yrs • {p.gender}</p>
+              </div>
+              <div className="flex items-center gap-6">
+                <span className={`px-3 py-1 text-sm font-semibold rounded-full border ${statusStyle[p.status]}`}>{p.status}</span>
+                <span className="text-sm text-gray-500">{p.time}</span>
+                <button
+                  onClick={() => navigate(`/patient/${p.id}`)}
+                  className="text-teal-600 font-semibold hover:underline"
+                >
+                  View Details →
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Add Patient Modal */}
+        {showModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+            <div className="bg-white p-8 rounded-lg shadow-xl w-96">
+              <h2 className="text-xl font-bold mb-4">Add New Patient</h2>
+              <input
+                type="text"
+                placeholder="Patient Name"
+                value={newPatient.name}
+                onChange={(e) => setNewPatient({ ...newPatient, name: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
+              />
+              <input
+                type="text"
+                placeholder="Patient ID"
+                value={newPatient.pid}
+                onChange={(e) => setNewPatient({ ...newPatient, pid: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
+              />
+              <input
+                type="number"
+                placeholder="Age"
+                value={newPatient.age}
+                onChange={(e) => setNewPatient({ ...newPatient, age: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
+              />
+              <select
+                value={newPatient.gender}
+                onChange={(e) => setNewPatient({ ...newPatient, gender: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-3"
+              >
+                <option>Male</option>
+                <option>Female</option>
+              </select>
+              <select
+                value={newPatient.status}
+                onChange={(e) => setNewPatient({ ...newPatient, status: e.target.value })}
+                className="w-full border border-gray-300 rounded px-3 py-2 mb-4"
+              >
+                <option>Stable</option>
+                <option>High Risk</option>
+                <option>Critical</option>
+              </select>
+              <div className="flex justify-end gap-2">
+                <button className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400" onClick={() => setShowModal(false)}>Cancel</button>
+                <button className="px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700" onClick={handleAddPatient}>Add</button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
