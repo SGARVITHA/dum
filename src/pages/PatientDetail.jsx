@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import RiskBadge from "../components/RiskBadge";
+import UnifiedChart from "../components/UnifiedChart";
 import html2pdf from "html2pdf.js";
 
 const PatientDetail = () => {
@@ -20,17 +21,19 @@ const PatientDetail = () => {
     mentalStatus: "Normal"
   });
 
-  const [ackNotes, setAckNotes] = useState("");
-  const [activeMenu, setActiveMenu] = useState("Vitals"); // "Vitals" / "Audit" / "Replay" / "Report"
+  const [ackNotes, setAckNotes] = useState({});
+  const [activeMenu, setActiveMenu] = useState("Vitals"); // "Vitals", "Audit", "Replay", "Report"
 
-  // Add a new vital entry
+  // Submit new vital entry
   const handleSubmitVital = () => {
+    if (!newVital.respiratoryRate || !newVital.systolicBP) return;
+
     const timestamp = new Date().toLocaleString();
     const stage = calculateStage(newVital);
 
     const entry = { ...newVital, timestamp, stage };
 
-    setPatient((prev) => ({
+    setPatient(prev => ({
       ...prev,
       vitals: [...prev.vitals, entry],
       alerts:
@@ -50,12 +53,12 @@ const PatientDetail = () => {
     return "Stable";
   };
 
-  const handleAcknowledge = (index) => {
+  const handleAcknowledge = index => {
     const updatedAlerts = [...patient.alerts];
     updatedAlerts[index].acknowledged = true;
-    updatedAlerts[index].notes = ackNotes || "No notes";
+    updatedAlerts[index].notes = ackNotes[index] || "No notes";
     setPatient({ ...patient, alerts: updatedAlerts });
-    setAckNotes("");
+    setAckNotes(prev => ({ ...prev, [index]: "" }));
   };
 
   const downloadPDF = () => {
@@ -92,26 +95,26 @@ const PatientDetail = () => {
       <main className="flex-1 p-8 bg-white">
         <h2 className="text-2xl font-bold mb-6">{patient.name} - Patient Detail</h2>
 
-        {/* Patient Data Entry */}
+        {/* Vitals Input */}
         {activeMenu === "Vitals" && (
           <div className="flex gap-3 mb-6">
             <input
               type="number"
               placeholder="Respiratory Rate"
               value={newVital.respiratoryRate}
-              onChange={(e) => setNewVital({ ...newVital, respiratoryRate: e.target.value })}
+              onChange={e => setNewVital({ ...newVital, respiratoryRate: e.target.value })}
               className="border border-gray-300 rounded px-3 py-2 w-36"
             />
             <input
               type="number"
               placeholder="Systolic BP"
               value={newVital.systolicBP}
-              onChange={(e) => setNewVital({ ...newVital, systolicBP: e.target.value })}
+              onChange={e => setNewVital({ ...newVital, systolicBP: e.target.value })}
               className="border border-gray-300 rounded px-3 py-2 w-36"
             />
             <select
               value={newVital.mentalStatus}
-              onChange={(e) => setNewVital({ ...newVital, mentalStatus: e.target.value })}
+              onChange={e => setNewVital({ ...newVital, mentalStatus: e.target.value })}
               className="border border-gray-300 rounded px-3 py-2 w-36"
             >
               <option>Normal</option>
@@ -126,14 +129,17 @@ const PatientDetail = () => {
           </div>
         )}
 
-        {/* Vitals Timeline */}
+        {/* Vitals Timeline / Unified Chart */}
         {activeMenu === "Vitals" && (
           <div id="report-content" className="mb-8">
             <h3 className="text-xl font-semibold mb-2">Vitals Timeline</h3>
+
+            <UnifiedChart data={patient.vitals} />
+
             {patient.vitals.length === 0 ? (
-              <p className="text-gray-500">No vitals entered yet.</p>
+              <p className="text-gray-500 mt-4">No vitals entered yet.</p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 mt-4">
                 {patient.vitals.map((v, idx) => (
                   <div
                     key={idx}
@@ -170,8 +176,8 @@ const PatientDetail = () => {
                     <input
                       type="text"
                       placeholder="Technical Notes"
-                      value={ackNotes}
-                      onChange={(e) => setAckNotes(e.target.value)}
+                      value={ackNotes[idx] || ""}
+                      onChange={e => setAckNotes(prev => ({ ...prev, [idx]: e.target.value }))}
                       className="border border-gray-300 rounded px-2 py-1 flex-1"
                     />
                     {!a.acknowledged && (
