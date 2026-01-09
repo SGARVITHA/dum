@@ -92,7 +92,32 @@ const PatientDetail = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-8 bg-white">
+      <main className="flex-1 p-8 bg-white pt-32">
+        {/* Alerts Notification (only in Vitals view) */}
+{activeMenu === "Vitals" && patient.alerts.some(a => !a.acknowledged) && (
+  <div className="mb-4">
+    {patient.alerts
+      .filter(a => !a.acknowledged)
+      .map((a, idx) => (
+        <div
+          key={idx}
+          className="bg-red-500 text-white p-3 rounded flex justify-between items-center shadow-md animate-fade-in"
+        >
+          <span className="font-semibold">
+            ALERT: {a.stage} at {a.timestamp}
+          </span>
+          <button
+            onClick={() => handleAcknowledge(idx)}
+            className="bg-white text-red-500 px-2 py-1 rounded hover:bg-gray-100 ml-2"
+          >
+            Acknowledge
+          </button>
+        </div>
+      ))}
+  </div>
+)}
+
+        
         <h2 className="text-2xl font-bold mb-6">{patient.name} - Patient Detail</h2>
 
         {/* Vitals Input */}
