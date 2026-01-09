@@ -65,7 +65,7 @@ const PatientDetail = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       {/* Header Section */}
-      <div className="bg-gradient-to-r from-teal-600 to-blue-600 text-white rounded-xl p-6 mb-6 shadow-lg">
+      <div className="bg-teal-600 text-white rounded-xl p-6 mb-6 shadow-lg">
         <div className="flex items-center gap-4">
           <ArrowLeft className="cursor-pointer" />
           <div>
