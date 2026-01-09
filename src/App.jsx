@@ -5,15 +5,43 @@ import Login from "./pages/Login";
 import PatientList from "./pages/PatientList";
 import PatientDetail from "./pages/PatientDetail";
 import ReportPage from "./pages/ReportPage";
+import RequireAuth from "./components/RequireAuth";
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Public */}
         <Route path="/" element={<Login />} />
-        <Route path="/patients" element={<PatientList />} />
-        <Route path="/patients/:id" element={<PatientDetail />} />
-        <Route path="/report/:id" element={<ReportPage />} />
+
+        {/* Protected */}
+        <Route
+          path="/patients"
+          element={
+            <RequireAuth>
+              <PatientList />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/patients/:id"
+          element={
+            <RequireAuth>
+              <PatientDetail />
+            </RequireAuth>
+          }
+        />
+
+        <Route
+          path="/report/:id"
+          element={
+            <RequireAuth>
+              <ReportPage />
+            </RequireAuth>
+          }
+        />
+
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
