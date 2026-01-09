@@ -1,19 +1,26 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import PatientList from "./pages/PatientList";
 import PatientDetail from "./pages/PatientDetail";
-import ReportPage from "./pages/ReportPage";
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
+        {/* Login page */}
         <Route path="/" element={<Login />} />
+
+        {/* Patient dashboard / list */}
         <Route path="/patients" element={<PatientList />} />
+
+        {/* Patient detail page */}
         <Route path="/patient/:id" element={<PatientDetail />} />
-        <Route path="/patient/:id/report" element={<ReportPage />} />
+
+        {/* Optional: fallback to login for unknown paths */}
+        <Route path="*" element={<Login />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 };
 
