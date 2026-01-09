@@ -1,31 +1,24 @@
-<div id="report-content">
-import RiskBadge from "../components/RiskBadge";
-import VitalsTable from "../components/VitalsTable";
-import AlertList from "../components/AlertList";
-import PDFDownloadButton from "../components/PDFDownloadButton";
+import React from "react";
+import html2pdf from "html2pdf.js";
 
 const ReportPage = () => {
+  const downloadPDF = () => {
+    const element = document.getElementById("report-content");
+    html2pdf().from(element).save("Sepsis_Report.pdf");
+  };
+
   return (
-    <div className="p-6">
-      
+    <div style={{ padding: 40 }}>
       <div id="report-content">
-        <h2>Patient Report</h2>
-
-        <p>Name: John Doe</p>
-        <p>Patient ID: P1023</p>
-
-        <RiskBadge risk="Escalating" />
-
-        <VitalsTable />
-        <AlertList />
-
-        <p>
-          <strong>Doctor Note:</strong> Monitoring required.
-        </p>
+        <h2>Sepsis Monitoring Report</h2>
+        <p>Respiratory Rate: 26</p>
+        <p>Systolic BP: 90</p>
+        <p>Mental Status: Altered</p>
+        <p>Risk: Escalating</p>
+        <p>Doctor Review: Possible renal deterioration</p>
       </div>
 
-      {/* OUTSIDE report-content */}
-      <PDFDownloadButton />
+      <button onClick={downloadPDF}>Download PDF</button>
     </div>
   );
 };
