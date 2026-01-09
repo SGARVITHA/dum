@@ -1,118 +1,72 @@
-import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Login = () => {
   const navigate = useNavigate();
   const [name, setName] = useState("");
-  const [role, setRole] = useState("Doctor"); // default role
-  const [error, setError] = useState("");
+  const [password, setPassword] = useState("");
+  const [occupation, setOccupation] = useState("Doctor"); // default occupation
 
   const handleLogin = () => {
-    if (!name.trim()) {
-      setError("Please enter your name");
-      return;
+    if (!name || !password) {
+      return alert("Please fill all fields");
     }
-
-    // Save mock token & clinician info for audit
-    localStorage.setItem("token", "mock-jwt");
-    localStorage.setItem("doctorName", name);
-    localStorage.setItem("role", role);
-
+    // save user info if needed
+    // Example: localStorage.setItem("user", JSON.stringify({ name, occupation }));
     navigate("/patients");
   };
 
   return (
-    <div style={styles.container}>
-      <div style={styles.box}>
-        <h2 style={styles.title}>Clinician Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-100 to-blue-200">
+      <div className="bg-white rounded-2xl shadow-lg p-10 w-96">
+        <h2 className="text-3xl font-bold text-center mb-6 text-blue-700">Vitalyn Login</h2>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Name:</label>
+        <div className="flex flex-col gap-4">
+          {/* Name */}
           <input
             type="text"
+            placeholder="Enter your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            style={styles.input}
-            placeholder="Enter your name"
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-        </div>
 
-        <div style={styles.inputGroup}>
-          <label style={styles.label}>Role:</label>
+          {/* Password */}
+          <input
+            type="password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          />
+
+          {/* Occupation */}
           <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={styles.select}
+            value={occupation}
+            onChange={(e) => setOccupation(e.target.value)}
+            className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
           >
             <option>Doctor</option>
             <option>Nurse</option>
+            <option>Technician</option>
           </select>
+
+          {/* Login Button */}
+          <button
+            onClick={handleLogin}
+            className="bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            Login
+          </button>
         </div>
 
-        {error && <p style={styles.error}>{error}</p>}
-
-        <button style={styles.button} onClick={handleLogin}>
-          Login
-        </button>
+        {/* Optional Signup link */}
+        <p className="mt-4 text-center text-gray-500 text-sm">
+          Don't have an account? <span className="text-blue-600 cursor-pointer">Sign up</span>
+        </p>
       </div>
     </div>
   );
-};
-
-const styles = {
-  container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    height: "100vh",
-    background: "#f5f5f5"
-  },
-  box: {
-    background: "#fff",
-    padding: 40,
-    borderRadius: 10,
-    boxShadow: "0px 0px 15px rgba(0,0,0,0.2)",
-    minWidth: 320
-  },
-  title: {
-    marginBottom: 20,
-    textAlign: "center"
-  },
-  inputGroup: {
-    marginBottom: 15
-  },
-  label: {
-    display: "block",
-    marginBottom: 5,
-    fontWeight: "bold"
-  },
-  input: {
-    width: "100%",
-    padding: 8,
-    borderRadius: 5,
-    border: "1px solid #ccc"
-  },
-  select: {
-    width: "100%",
-    padding: 8,
-    borderRadius: 5,
-    border: "1px solid #ccc"
-  },
-  button: {
-    width: "100%",
-    padding: 10,
-    borderRadius: 5,
-    border: "none",
-    background: "#4caf50",
-    color: "#fff",
-    fontWeight: "bold",
-    cursor: "pointer"
-  },
-  error: {
-    color: "red",
-    marginBottom: 10,
-    textAlign: "center"
-  }
 };
 
 export default Login;

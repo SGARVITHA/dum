@@ -1,51 +1,18 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import PatientList from "./pages/PatientList";
 import PatientDetail from "./pages/PatientDetail";
-import ReportPage from "./pages/ReportPage";
-import RequireAuth from "./components/RequireAuth";
 
-const App = () => {
+function App() {
   return (
-    <BrowserRouter>
+    <Router>
       <Routes>
-        {/* Public */}
         <Route path="/" element={<Login />} />
-
-        {/* Protected */}
-        <Route
-          path="/patients"
-          element={
-            <RequireAuth>
-              <PatientList />
-            </RequireAuth>
-          }
-        />
-
-        <Route
-          path="/patients/:id"
-          element={
-            <RequireAuth>
-              <PatientDetail />
-            </RequireAuth>
-          }
-        />
-
-        <Route
-          path="/report/:id"
-          element={
-            <RequireAuth>
-              <ReportPage />
-            </RequireAuth>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="/patients" element={<PatientList />} />
+        <Route path="/patient/:patientId" element={<PatientDetail />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
-};
+}
 
 export default App;
